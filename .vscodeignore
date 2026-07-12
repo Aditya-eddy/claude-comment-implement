@@ -1,0 +1,9 @@
+.vscode/**
+src/**
+docs/**
+node_modules/**
+tsconfig.json
+**/*.map
+**/*.ts
+.gitignore
+warmtest.log

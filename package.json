@@ -61,7 +61,9 @@
   "scripts": {
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "vscode:prepublish": "npm run compile"
+    "vscode:prepublish": "npm run compile",
+    "package": "npx --yes @vscode/vsce package --allow-missing-repository -o claude-comment-implement-0.1.0.vsix",
+    "reinstall": "npm run package && code --install-extension claude-comment-implement-0.1.0.vsix --force"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

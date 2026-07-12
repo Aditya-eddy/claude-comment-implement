@@ -63,4 +63,4 @@ Any of these leaders followed by the marker keyword and an instruction:
 
 ## Design
 
-See [`docs/superpowers/specs/2026-07-13-claude-inline-complete-design.md`](docs/superpowers/specs/2026-07-13-claude-inline-complete-design.md).
+See `docs/superpowers/specs/2026-07-13-claude-inline-complete-design.md` in the source tree.
