@@ -28,9 +28,12 @@ export async function implement(
   arg: ImplementArgs | undefined,
   session: SessionManager,
   pending: PendingStore,
-  getContextLines: () => number
+  getContextLines: () => number,
+  log: (msg: string) => void = () => {}
 ): Promise<void> {
+  log(`implement: fired arg=${JSON.stringify(arg)}`);
   if (!arg || typeof arg.uri !== 'string') {
+    log('implement: bad/missing arg; aborting');
     return;
   }
   const uri = vscode.Uri.parse(arg.uri);
@@ -61,14 +64,17 @@ export async function implement(
     : '';
 
   const prompt = buildPrompt(document.languageId, arg.instruction, before, after);
+  log(`implement: sending prompt (${prompt.length} chars) for line ${lineNo} lang=${document.languageId}`);
 
   const result = await vscode.window.withProgress(
     { location: vscode.ProgressLocation.Notification, title: 'Claude: implementing…', cancellable: true },
     (_progress, token) => session.send(prompt, token)
   );
+  log(`implement: raw result (${result.length} chars): ${JSON.stringify(result.slice(0, 120))}`);
 
   const code = reindent(cleanResult(result), indent);
   if (!code) {
+    log('implement: cleaned code empty; nothing to show');
     vscode.window.setStatusBarMessage('Claude: no code generated (or cancelled).', 3000);
     return;
   }
@@ -78,5 +84,7 @@ export async function implement(
   pending.set({ uri: arg.uri, line: lineNo, character: lineText.length, text: '\n' + code });
   editor.selection = new vscode.Selection(anchor, anchor);
   editor.revealRange(new vscode.Range(anchor, anchor));
+  log(`implement: pending set at ${lineNo}:${lineText.length} (${code.length} chars); cursor moved; triggering inlineSuggest`);
   await vscode.commands.executeCommand('editor.action.inlineSuggest.trigger');
+  log('implement: inlineSuggest.trigger dispatched');
 }

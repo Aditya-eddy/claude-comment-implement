@@ -150,6 +150,7 @@ export class SessionManager {
           sub?.dispose();
           this.active = null;
           this.completions++;
+          this.log(`turn: result received (len=${(result ?? '').length}, isError=${isError})`);
           if (isError) {
             this.log('turn returned error; recycling session');
             this.recycle();
@@ -173,6 +174,7 @@ export class SessionManager {
       };
 
       const message = JSON.stringify({ type: 'user', message: { role: 'user', content } }) + '\n';
+      this.log(`turn: writing message (${content.length} chars) to warm process`);
       try {
         this.child.stdin.write(message);
       } catch (err) {

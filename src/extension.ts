@@ -39,7 +39,7 @@ export function activate(context: vscode.ExtensionContext): void {
   session.start();
 
   const codeLens = new ClaudeCodeLensProvider(getMarker);
-  const inline = new ClaudeInlineCompletionProvider(pending);
+  const inline = new ClaudeInlineCompletionProvider(pending, log);
 
   const selector: vscode.DocumentSelector = { pattern: '**' };
 
@@ -70,7 +70,7 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.languages.registerCodeLensProvider(selector, codeLens),
     vscode.languages.registerInlineCompletionItemProvider(selector, inline),
     vscode.commands.registerCommand('claudeComplete.implement', (arg: ImplementArgs) =>
-      implement(arg, session, pending, getContextLines).catch((err) => {
+      implement(arg, session, pending, getContextLines, log).catch((err) => {
         log(`implement failed: ${String(err)}`);
         vscode.window.setStatusBarMessage('Claude: implement failed (see output).', 4000);
       })
