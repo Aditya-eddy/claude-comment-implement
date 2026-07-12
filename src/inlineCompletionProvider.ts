@@ -31,6 +31,13 @@ export class ClaudeInlineCompletionProvider implements vscode.InlineCompletionIt
       return undefined;
     }
     this.log(`provide: MATCH at ${position.line}:${position.character} -> returning ghost (${p.text.length} chars)`);
-    return [new vscode.InlineCompletionItem(p.text, new vscode.Range(position, position))];
+    const item = new vscode.InlineCompletionItem(p.text, new vscode.Range(position, position));
+    // Runs after the user accepts (Tab): delete the original //claude comment line.
+    item.command = {
+      command: 'claudeComplete.acceptedCleanup',
+      title: 'Remove Claude comment',
+      arguments: [{ uri: p.uri, line: p.line }]
+    };
+    return [item];
   }
 }

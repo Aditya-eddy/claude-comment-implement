@@ -47,7 +47,11 @@ implement request as a new turn on it.
   typing).
 - Response cache, multi-suggestion cycling.
 - Diff/preview-before-apply UI.
-- Replacing the comment (MVP keeps the comment; ghost text appears below it).
+
+On acceptance, the original `//claude …` marker comment is **removed**: the accepted
+`InlineCompletionItem` carries a `command` (`claudeComplete.acceptedCleanup`) that VS Code runs
+after insertion, which deletes the comment line (merged into the accept's undo step so a single
+Ctrl+Z reverts both the insert and the removal).
 
 ## Empirical basis (measured, `claude` 2.1.207, Node 24)
 

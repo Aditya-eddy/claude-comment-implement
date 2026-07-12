@@ -5,7 +5,7 @@ import { SessionManager, SessionConfig } from './session';
 import { PendingStore } from './pending';
 import { ClaudeCodeLensProvider } from './codeLensProvider';
 import { ClaudeInlineCompletionProvider } from './inlineCompletionProvider';
-import { implement, ImplementArgs } from './implementCommand';
+import { implement, removeCommentLine, ImplementArgs } from './implementCommand';
 
 export function activate(context: vscode.ExtensionContext): void {
   const output = vscode.window.createOutputChannel('Claude Comment Implement');
@@ -74,6 +74,9 @@ export function activate(context: vscode.ExtensionContext): void {
         log(`implement failed: ${String(err)}`);
         vscode.window.setStatusBarMessage('Claude: implement failed (see output).', 4000);
       })
+    ),
+    vscode.commands.registerCommand('claudeComplete.acceptedCleanup', (arg: { uri: string; line: number }) =>
+      removeCommentLine(arg, log).catch((err) => log(`cleanup failed: ${String(err)}`))
     ),
     vscode.commands.registerCommand('claudeComplete.restartSession', () => {
       session.restart();

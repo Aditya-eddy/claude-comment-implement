@@ -88,3 +88,36 @@ export async function implement(
   await vscode.commands.executeCommand('editor.action.inlineSuggest.trigger');
   log('implement: inlineSuggest.trigger dispatched');
 }
+
+/**
+ * Runs after the ghost text is accepted (via InlineCompletionItem.command):
+ * deletes the original marker comment line, merged into the accept's undo step.
+ */
+export async function removeCommentLine(
+  arg: { uri: string; line: number } | undefined,
+  log: (msg: string) => void = () => {}
+): Promise<void> {
+  if (!arg || typeof arg.uri !== 'string' || typeof arg.line !== 'number') {
+    return;
+  }
+  const editor = vscode.window.visibleTextEditors.find((e) => e.document.uri.toString() === arg.uri)
+    ?? vscode.window.activeTextEditor;
+  if (!editor || editor.document.uri.toString() !== arg.uri) {
+    log(`cleanup: no matching editor for ${arg.uri}`);
+    return;
+  }
+  const doc = editor.document;
+  if (arg.line < 0 || arg.line >= doc.lineCount) {
+    return;
+  }
+  // Delete the whole comment line including its trailing newline (code sits below it).
+  const start = new vscode.Position(arg.line, 0);
+  const end = arg.line + 1 < doc.lineCount
+    ? new vscode.Position(arg.line + 1, 0)
+    : doc.lineAt(arg.line).range.end;
+  await editor.edit(
+    (eb) => eb.delete(new vscode.Range(start, end)),
+    { undoStopBefore: false, undoStopAfter: true }
+  );
+  log(`cleanup: removed comment line ${arg.line}`);
+}
