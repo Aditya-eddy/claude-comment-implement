@@ -1,0 +1,71 @@
+{
+  "name": "claude-comment-implement",
+  "displayName": "Claude Comment Implement",
+  "description": "Write a //claude comment, click the CodeLens, get code as ghost text you accept with Tab. Powered by the local Claude CLI (Haiku). No API key.",
+  "version": "0.1.0",
+  "publisher": "keploy",
+  "engines": {
+    "vscode": "^1.84.0"
+  },
+  "categories": [
+    "Machine Learning",
+    "Programming Languages",
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "claudeComplete.implement",
+        "title": "Claude: Implement This Comment"
+      },
+      {
+        "command": "claudeComplete.restartSession",
+        "title": "Claude: Restart Completion Session"
+      }
+    ],
+    "configuration": {
+      "title": "Claude Comment Implement",
+      "properties": {
+        "claudeComplete.model": {
+          "type": "string",
+          "default": "claude-haiku-4-5-20251001",
+          "description": "Claude model id passed to the CLI via --model."
+        },
+        "claudeComplete.claudePath": {
+          "type": "string",
+          "default": "claude",
+          "description": "Path to the claude CLI binary."
+        },
+        "claudeComplete.contextLines": {
+          "type": "number",
+          "default": 80,
+          "description": "How many lines of code before and after the comment to send as context."
+        },
+        "claudeComplete.recycleAfter": {
+          "type": "number",
+          "default": 30,
+          "description": "Recycle (restart) the warm claude process after this many completions to bound accumulating context."
+        },
+        "claudeComplete.marker": {
+          "type": "string",
+          "default": "claude",
+          "description": "The keyword that must follow a comment leader (// # -- ;) to trigger the CodeLens, e.g. 'claude' matches '//claude ...'."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "vscode:prepublish": "npm run compile"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.84.0",
+    "typescript": "^5.4.0"
+  }
+}
