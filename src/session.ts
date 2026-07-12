@@ -6,6 +6,12 @@ export interface SessionConfig {
   model: string;
   recycleAfter: number;
   cwd?: string;
+  /**
+   * Directory to use as CLAUDE_CODE_TMPDIR for the spawned CLI. VS Code's extension
+   * host does not inherit the user's shell env, so `claude` would otherwise default to
+   * a root-owned /tmp/claude-<uid> and refuse to start. Point it at a user-owned dir.
+   */
+  tmpDir?: string;
 }
 
 const SYSTEM_PROMPT = [
@@ -54,12 +60,16 @@ export class SessionManager {
       '--disallowedTools', 'Bash', 'Read', 'Edit', 'Write', 'Glob', 'Grep', 'WebFetch', 'WebSearch',
       '--append-system-prompt', SYSTEM_PROMPT
     ];
-    this.log(`starting: ${cfg.claudePath} ${args.slice(0, 8).join(' ')} …`);
+    const env = { ...process.env };
+    if (cfg.tmpDir && !env.CLAUDE_CODE_TMPDIR) {
+      env.CLAUDE_CODE_TMPDIR = cfg.tmpDir;
+    }
+    this.log(`starting: ${cfg.claudePath} … (CLAUDE_CODE_TMPDIR=${env.CLAUDE_CODE_TMPDIR ?? '<default>'})`);
     try {
       this.child = spawn(cfg.claudePath, args, {
         stdio: ['pipe', 'pipe', 'pipe'],
         cwd: cfg.cwd ?? process.cwd(),
-        env: process.env
+        env
       });
     } catch (err) {
       this.log(`spawn failed: ${String(err)}`);

@@ -1,4 +1,6 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
+import * as fs from 'fs';
 import { SessionManager, SessionConfig } from './session';
 import { PendingStore } from './pending';
 import { ClaudeCodeLensProvider } from './codeLensProvider';
@@ -13,11 +15,21 @@ export function activate(context: vscode.ExtensionContext): void {
   const getMarker = () => cfg().get<string>('marker', 'claude');
   const getContextLines = () => cfg().get<number>('contextLines', 80);
 
+  // The extension host does not inherit the user's shell env, so give the spawned
+  // `claude` a user-owned temp dir (else it refuses a root-owned /tmp/claude-<uid>).
+  const tmpDir = path.join(context.globalStorageUri.fsPath, 'claude-tmp');
+  try {
+    fs.mkdirSync(tmpDir, { recursive: true });
+  } catch (err) {
+    log(`failed to create tmp dir ${tmpDir}: ${String(err)}`);
+  }
+
   const sessionConfig = (): SessionConfig => ({
     claudePath: cfg().get<string>('claudePath', 'claude'),
     model: cfg().get<string>('model', 'claude-haiku-4-5-20251001'),
     recycleAfter: cfg().get<number>('recycleAfter', 30),
-    cwd: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
+    cwd: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath,
+    tmpDir
   });
 
   const session = new SessionManager(sessionConfig, log);
