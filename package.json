@@ -2,7 +2,7 @@
   "name": "claude-comment-implement",
   "displayName": "Claude Comment Implement",
   "description": "Write a //claude comment, click the CodeLens, get code as ghost text you accept with Tab. Powered by the local Claude CLI (Haiku). No API key.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "publisher": "keploy",
   "engines": {
     "vscode": "^1.84.0"
@@ -98,8 +98,8 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "vscode:prepublish": "npm run compile",
-    "package": "npx --yes @vscode/vsce package --allow-missing-repository -o claude-comment-implement-0.1.0.vsix",
-    "reinstall": "npm run package && code --install-extension claude-comment-implement-0.1.0.vsix --force"
+    "package": "npx --yes @vscode/vsce package --allow-missing-repository -o claude-comment-implement.vsix",
+    "reinstall": "npm run package && code --install-extension claude-comment-implement.vsix --force"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
