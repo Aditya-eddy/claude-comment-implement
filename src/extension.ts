@@ -5,6 +5,8 @@ import { SessionManager, SessionConfig } from './session';
 import { PendingStore } from './pending';
 import { ClaudeCodeLensProvider } from './codeLensProvider';
 import { ClaudeInlineCompletionProvider } from './inlineCompletionProvider';
+import { ActivityLog } from './activityLog';
+import { ClaudeActivityViewProvider } from './activityView';
 import { implement, removeCommentLine, ImplementArgs } from './implementCommand';
 
 export function activate(context: vscode.ExtensionContext): void {
@@ -34,6 +36,8 @@ export function activate(context: vscode.ExtensionContext): void {
 
   const session = new SessionManager(sessionConfig, log);
   const pending = new PendingStore();
+  const activityLog = new ActivityLog(100);
+  const activityView = new ClaudeActivityViewProvider(context.extensionUri, activityLog);
 
   // Warm the process at activation so the first click isn't a cold start... after the first.
   session.start();
@@ -64,19 +68,25 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     output,
     session,
+    activityLog,
     codeLens,
     onChange,
     onConfig,
+    vscode.window.registerWebviewViewProvider(ClaudeActivityViewProvider.viewId, activityView),
     vscode.languages.registerCodeLensProvider(selector, codeLens),
     vscode.languages.registerInlineCompletionItemProvider(selector, inline),
     vscode.commands.registerCommand('claudeComplete.implement', (arg: ImplementArgs) =>
-      implement(arg, session, pending, getContextLines, log).catch((err) => {
+      implement(arg, session, pending, getContextLines, activityLog, sessionConfig().model, log).catch((err) => {
         log(`implement failed: ${String(err)}`);
         vscode.window.setStatusBarMessage('Claude: implement failed (see output).', 4000);
       })
     ),
     vscode.commands.registerCommand('claudeComplete.acceptedCleanup', (arg: { uri: string; line: number }) =>
       removeCommentLine(arg, log).catch((err) => log(`cleanup failed: ${String(err)}`))
+    ),
+    vscode.commands.registerCommand('claudeComplete.clearActivity', () => activityLog.clear()),
+    vscode.commands.registerCommand('claudeComplete.showActivity', () =>
+      vscode.commands.executeCommand(`${ClaudeActivityViewProvider.viewId}.focus`)
     ),
     vscode.commands.registerCommand('claudeComplete.restartSession', () => {
       session.restart();

@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { SessionManager } from './session';
 import { PendingStore } from './pending';
+import { ActivityLog } from './activityLog';
 import { cleanResult, reindent } from './text';
 
 export interface ImplementArgs {
@@ -29,6 +30,8 @@ export async function implement(
   session: SessionManager,
   pending: PendingStore,
   getContextLines: () => number,
+  activityLog: ActivityLog,
+  model: string,
   log: (msg: string) => void = () => {}
 ): Promise<void> {
   log(`implement: fired arg=${JSON.stringify(arg)}`);
@@ -66,10 +69,25 @@ export async function implement(
   const prompt = buildPrompt(document.languageId, arg.instruction, before, after);
   log(`implement: sending prompt (${prompt.length} chars) for line ${lineNo} lang=${document.languageId}`);
 
-  const result = await vscode.window.withProgress(
-    { location: vscode.ProgressLocation.Notification, title: 'Claude: implementing…', cancellable: true },
-    (_progress, token) => session.send(prompt, token)
-  );
+  const activityId = activityLog.start({ instruction: arg.instruction, prompt, model });
+  const startedAt = Date.now();
+  let cancelled = false;
+  let result = '';
+  try {
+    result = await vscode.window.withProgress(
+      { location: vscode.ProgressLocation.Notification, title: 'Claude: implementing…', cancellable: true },
+      (_progress, token) => {
+        token.onCancellationRequested(() => { cancelled = true; });
+        return session.send(prompt, token);
+      }
+    );
+  } catch (err) {
+    log(`implement: send threw: ${String(err)}`);
+    activityLog.complete(activityId, { response: String(err), status: 'error', durationMs: Date.now() - startedAt });
+    throw err;
+  }
+  const status = cancelled ? 'cancelled' : (result.trim() ? 'ok' : 'empty');
+  activityLog.complete(activityId, { response: result, status, durationMs: Date.now() - startedAt });
   log(`implement: raw result (${result.length} chars): ${JSON.stringify(result.slice(0, 120))}`);
 
   const code = reindent(cleanResult(result), indent);

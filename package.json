@@ -17,6 +17,24 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "claude-activity",
+          "title": "Claude Activity",
+          "icon": "media/claude.svg"
+        }
+      ]
+    },
+    "views": {
+      "claude-activity": [
+        {
+          "type": "webview",
+          "id": "claudeComplete.activityView",
+          "name": "Requests"
+        }
+      ]
+    },
     "commands": [
       {
         "command": "claudeComplete.implement",
@@ -25,8 +43,26 @@
       {
         "command": "claudeComplete.restartSession",
         "title": "Claude: Restart Completion Session"
+      },
+      {
+        "command": "claudeComplete.showActivity",
+        "title": "Claude: Show Activity"
+      },
+      {
+        "command": "claudeComplete.clearActivity",
+        "title": "Claude: Clear Activity",
+        "icon": "$(clear-all)"
       }
     ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "claudeComplete.clearActivity",
+          "when": "view == claudeComplete.activityView",
+          "group": "navigation"
+        }
+      ]
+    },
     "configuration": {
       "title": "Claude Comment Implement",
       "properties": {
